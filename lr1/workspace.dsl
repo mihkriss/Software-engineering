@@ -102,18 +102,16 @@ workspace "Сайт конференции" {
         
         admin -> conference "Управляет докладами и конференциями"
         
-        guest -> createUser "Создание пользователя"
-        
         guest -> searchUserMask "Поиск пользователя по имени"
         dbUser -> searchUserMask "Читает данные о пользователях по имени"
         
         guest -> searchUserLogin "Поиск пользователя по логину"
         dbUser -> searchUserLogin "Читает данные о пользователях по логину"
         
-        guest -> listDoclad "Поиск доступных докладов"
-        dbDoclad -> listDoclad "Читает данные о доступных докладах"
+        guest -> listDoclad "Поиск доступных всех докладов"
+        dbDoclad -> listDoclad "Читает данные о доступных всех докладах"
         
-        guest -> listDocladConference "Поиск доступных докладов"
+        guest -> listDocladConference "Поиск доступных докладов в конференции"
         dbDoclad -> listDocladConference "Читает данные о доступных докладах в конференции"
     }
     
