@@ -9,7 +9,6 @@ engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
 
 def create_tables():
-    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     
 class User(Base):
