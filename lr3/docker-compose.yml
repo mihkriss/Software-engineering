@@ -11,6 +11,7 @@ services:
       POSTGRES_DB: conference
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./db/pg_trgm.sql:/docker-entrypoint-initdb.d/pg_trgm.sql
     ports:
       - "5432:5432"
     networks:
