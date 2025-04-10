@@ -13,18 +13,47 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - services-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d conference"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  web:
-    build: .
-    container_name: conference_app
+  user-services:
+    build: 
+      context: .
+      dockerfile: user/docker/Dockerfile
+    container_name: users_app
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/conference
+    networks:
+      - services-network
+
+  conference-services:
+    build: 
+      context: .
+      dockerfile: conference/docker/Dockerfile
+    container_name: conferences_app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/conference
+    networks:
+      - services-network
+
+networks:
+  services-network:
+    driver: bridge
 
 volumes:
   postgres_data:
