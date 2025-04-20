@@ -41,7 +41,6 @@ services:
       timeout: 5s
       retries: 10
 
-  # Остальные сервисы без изменений
   user-services:
     build: 
       context: .
