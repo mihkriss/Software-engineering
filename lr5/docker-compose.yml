@@ -1,0 +1,100 @@
+version: "3.8"
+
+services:
+
+  db:
+    image: postgres:14
+    container_name: conferences_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: conference
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # - ./db/pg_trgm.sql:/docker-entrypoint-initdb.d/pg_trgm.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - services-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d conference"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:4.2 
+    container_name: conferences_mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: conference
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - services-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "'db.runCommand(\"ping\").ok'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:5.0.0
+    container_name: conferences_cache
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - services-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  user-services:
+    build: 
+      context: .
+      dockerfile: user/docker/Dockerfile
+    container_name: users_app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/conference
+      REDIS_URL: redis://redis:6379/0
+    networks:
+      - services-network
+
+  conference-services:
+    build: 
+      context: .
+      dockerfile: conference/docker/Dockerfile
+    container_name: conferences_app
+    depends_on:
+      db:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/conference
+      MONGO_URL: mongodb://mongo:27017/conference
+    networks:
+      - services-network
+
+networks:
+  services-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mongo_data:
